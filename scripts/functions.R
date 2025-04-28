@@ -1,4 +1,5 @@
 library(data.table)
+library(stringi)
 
 #Inputs: DS_CARGO, QT_VOTOS_NOMINAIS_VALIDOS, CD_MUNICIPIO, NR_TURNO, SQ_CANDIDATO, SG_UF
 
@@ -11,6 +12,7 @@ run_votes_on_winners_1 <- function(e){
         
         # Filter for current cargo and make a copy
         p <- a[grepl(c, DS_CARGO, ignore.case = TRUE)]
+        cat("All available categories: ", p[, unique(DS_SIT_TOT_TURNO)], "\n")
         # Compute candidate votes per municipality
         p[, QT_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO := 
             sum(QT_VOTOS_NOMINAIS_VALIDOS), by = .(CD_MUNICIPIO, NR_TURNO, SQ_CANDIDATO)]
@@ -38,12 +40,12 @@ run_votes_on_winners_1 <- function(e){
         # Filter elected candidates only
         p_1 <- p[
   (
-    grepl("ELEITO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE) |
-    grepl("MEDIA",  stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
+    grepl("ELEITO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE) 
+    | grepl("MEDIA",  stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
   ) &
   !grepl("NAO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
 ]
-        print(p_1[, unique(DS_SIT_TOT_TURNO)])  
+        cat("Selected categories as elect: ", p_1[, unique(DS_SIT_TOT_TURNO)], "\n")  
         # Select relevant columns and drop duplicates
         p_2 <- unique(p_1[, .(CD_MUNICIPIO, 
                                 PROP_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO,
@@ -79,6 +81,7 @@ run_votes_on_winners_2 <- function(e){
         
         # Filter for current cargo and make a copy
         p <- a[grepl(c, DS_CARGO, ignore.case = TRUE)]
+        cat("All available categories: ", p[, unique(DS_SIT_TOT_TURNO)], "\n")
         # Compute candidate votes per municipality
         p[, QT_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO := 
             sum(QT_VOTOS_NOMINAIS), by = .(CD_MUNICIPIO, NR_TURNO, SQ_CANDIDATO)]
@@ -106,12 +109,12 @@ run_votes_on_winners_2 <- function(e){
         # Filter elected candidates only
         p_1 <- p[
   (
-    grepl("ELEITO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE) |
-    grepl("MEDIA",  stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
+    grepl("ELEITO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE) 
+     | grepl("MEDIA",  stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
   ) &
   !grepl("NAO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
 ]
-        print(p_1[, unique(DS_SIT_TOT_TURNO)])    
+        cat("Selected categories as elect: ", p_1[, unique(DS_SIT_TOT_TURNO)], "\n")     
         # Select relevant columns and drop duplicates
         p_2 <- unique(p_1[, .(CD_MUNICIPIO, 
                                 PROP_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO,

@@ -1,5 +1,5 @@
-
-library(data.table)
+library(data.table) 
+library(stringi)
 
 
 source("./scripts/functions.R") 
@@ -31,7 +31,16 @@ for (year in years) {
     merged[, ANO := year]
     merged_list[[length(merged_list) + 1]] <- merged
 }
-combined <- rbindlist(merged_list)
+combined_sem_media <- rbindlist(merged_list)
+save(combined_sem_media, file = paste0("./report/votes_on_winner_.rds"))
 save(combined, file = paste0("./report/votes_on_winner.rds"))
 
+load("./report/votes_on_winner.rds")
+
 rm(list = ls())
+
+# TODO  - Build descriptive statistics to test data in different time periods.
+# TODO  - Understand why votes_on_winner is not running anymore.
+# TODO - Test updates on checking available categories as elect.
+# TODO - Test if the MEDIA should be considered elect or not elect.
+# TODO - Test if the standardized values for president is the same as the non standardized values.
