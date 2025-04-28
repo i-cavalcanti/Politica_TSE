@@ -1,0 +1,7 @@
+data/
+report/
+renv/
+test.R
+.Rprofile
+renv.lock
+
