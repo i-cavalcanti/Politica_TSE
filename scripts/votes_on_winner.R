@@ -50,4 +50,22 @@ rm(list = ls())
 
 # TODO - Test if the standardized values for president is the same as the non standardized values.
 # TODO - Add president values.
+
 # TODO - run for the other indicators 
+
+# TODO - Dropar regioes extras para presidente
+# TODO - Add AMC in the place of municipalities
+
+
+
+# TODO - Diversificacao
+# TODO - Votos no vencedor para vereador
+
+# TODO - Construir a estrutura para serie temporal 
+
+
+
+# CANDIDATOS/VAGA
+# CANDIDATOS/HABITANTE
+#FIDELIDADE PARTIDÁRIA
+# CABRESTO

@@ -96,3 +96,90 @@ run_votes_on_winners_presid <- function(group){
     setnames(p_2, old = "PROP_VOTOS_VENCEDOR_STD_", new = new_colname)  
     return(p_2)
 }
+
+parlament_seat_competition  <- function(group){
+    cat("Running:", group, "\n")
+    p <- a[grepl(group, DS_CARGO, ignore.case = TRUE)]
+    p_1 <- p[, .(NUM_CANDIDATOS = uniqueN(SQ_CANDIDATO)), by = CD_MUNICIPIO]
+    p_2 <- parlament_elect_filter(p)
+    p_3 <- p_2[, .(NUM_CANDIDATOS = uniqueN(SQ_CANDIDATO)), by = CD_MUNICIPIO]
+    table <- merge(p_1, p_3, by = "CD_MUNICIPIO", all = FALSE)
+    table[, VEREADORES_POR_VAGA := 
+        NUM_CANDIDATOS.x / NUM_CANDIDATOS.y]
+    table[, c("NUM_CANDIDATOS.x", "NUM_CANDIDATOS.y") := NULL]
+    return(table)
+}
+
+parlament_seat_by_hab  <- function(group, year){
+    cat("Running:", group, "\n")
+    p <- a[grepl(group, DS_CARGO, ignore.case = TRUE)]
+    p_1 <- p[, .(NUM_CANDIDATOS = uniqueN(SQ_CANDIDATO)), by = CD_MUNICIPIO]
+    pop <- open_pop_data()[ANO_ELEICAO == year]
+    table <- merge(p_1, pop, by = "CD_MUNICIPIO", all = FALSE)
+    table[, VEREADORES_POR_HABITANTE := 
+        NUM_CANDIDATOS / Population]
+    table[, c("NUM_CANDIDATOS", "Population", "ANO_ELEICAO") := NULL]
+    return(table)
+}
+
+parlament_std_dev <- function(group){
+    p <- a[grepl(group, DS_CARGO, ignore.case = TRUE)]
+    p[, QT_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO := 
+            sum(QT_VOTOS_NOMINAIS_VALIDOS), by = .(CD_MUNICIPIO, NR_TURNO, SQ_CANDIDATO)]
+    p[, QT_VOTOS_NOMINAIS_VALIDOS_MUNICIPIO := 
+        sum(QT_VOTOS_NOMINAIS_VALIDOS), by = .(CD_MUNICIPIO, NR_TURNO)]
+    p[, PROP_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO := 
+        QT_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO / QT_VOTOS_NOMINAIS_VALIDOS_MUNICIPIO]
+    table <- p[, .(
+    STD_DEV_PROP_VOTOS_MUNICIPIO = sd(PROP_VOTOS_NOMINAIS_VALIDOS_CANDIDATO_MUNICIPIO, na.rm = TRUE)
+    ), by = CD_MUNICIPIO]
+    return(table)
+}
+
+parlament_votes_on_winners <- function(group){
+    cat("Running:", group, "\n")
+    # 1. Filter for DS_CARGO == e[1]
+    p <- a[DS_CARGO == group]
+
+    # 2. Calculate total valid votes by CD_MUNICIPIO and NR_TURNO
+    p[, QT_VOTOS_NOMINAIS_VALIDOS_TOT := sum(QT_VOTOS_NOMINAIS_VALIDOS, na.rm = TRUE), by = .(CD_MUNICIPIO, NR_TURNO)]
+
+    # 3. Create proportion
+    p[, PROP_VOTOS_VENCEDOR_STD_ := QT_VOTOS_NOMINAIS_VALIDOS / QT_VOTOS_NOMINAIS_VALIDOS_TOT]
+
+    # 4. Filter only elected candidates
+    p_1 <- parlament_elect_filter(p)
+    cat("Selected categories as elect: ", p_1[, unique(DS_SIT_TOT_TURNO)], "\n")    
+
+    # 5. Group by CD_MUNICIPIO and sum the proportions
+    p_2 <- p_1[, .(PROP_VOTOS_VENCEDOR_STD_ = sum(PROP_VOTOS_VENCEDOR_STD_, na.rm = TRUE)), by = CD_MUNICIPIO]
+    new_colname <- paste0("PROP_VOTOS_VENCEDOR_STD_", gsub(" ", "_", toupper(group)))
+    setnames(p_2, old = "PROP_VOTOS_VENCEDOR_STD_", new = new_colname)  
+    return(p_2)
+}
+
+parlament_elect_filter <- function(p){
+    table <- p[
+    (grepl("ELEITO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE) 
+        | grepl("MEDIA",  stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
+    ) &
+    !grepl("NAO", stri_trans_general(DS_SIT_TOT_TURNO, "Latin-ASCII"), ignore.case = TRUE)
+    ]
+    return(table)
+}
+
+open_pop_data <- function() {
+    
+    #pop <- fread("./data/pop.csv")
+    pop <- melt(
+    fread("./data/pop.csv"),
+    id.vars = "CodMunicipal",                  # columns to keep fixed
+    measure.vars = c("2000", "2004", "2008", "2012", "2016", "2020", "2024"),  # columns to stack
+    variable.name = "ANO_ELEICAO",
+    value.name = "Population"
+    )
+    pop[, ANO_ELEICAO := as.integer(as.character(ANO_ELEICAO))]
+    setnames(pop, old = "CodMunicipal", new = "CD_MUNICIPIO")
+    return(pop)
+}
+
