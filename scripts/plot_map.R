@@ -30,7 +30,7 @@ ggplot(map_data) +
   facet_wrap(~ANO) +
   scale_fill_viridis_c(option = "C") +
   theme_minimal() +
-  labs(title = "Variable by Municipality", fill = "PROP_VOTOS_VENCEDOR_STD_GOVERNADOR")
+  labs(title = "Variable by Municipality", fill = "PROP_VOTOS_VENCEDOR_STD_PRESIDENTE")
 
 
 
